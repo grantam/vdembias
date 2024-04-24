@@ -159,6 +159,31 @@ summary(m1)
 
 ICC(m1)
 
+names <- c("Intercept", "Turnover Within", "Legislative Elections Within", "Executive Elections Within", "Multi-Party Elections Within", "Years Since Election Within", "Uncertainty Within", "Turnover Between", "Legislative Elections Between", "Executive Elections Between", "Multi-Party Elections Between", "Years Since Election Between", "Uncertainty Between", "Suffrage Between", "Suffrage Within", "Political Liberties Within", "Political Liberties Between")
+
+coef.plot <- summary(m1)[10]
+coef.plot2 <- coef.plot[["coefficients"]]
+coef.plot2 <- as.data.frame(cbind(coef.plot2, names)) %>%
+  rename(stde = `Std. Error`) %>%
+  mutate(stde = as.double(stde), mean = as.double(Estimate), sig = as.double(`t value`))
+
+viz_data <- coef.plot2 %>%
+  mutate(lower = mean - (1.96 * stde), upper = mean + (1.96 * stde), sig_factor = ifelse(abs(sig) >= 1.96, T, F)) %>%
+  filter(names != "Intercept") %>%
+  mutate(names = reorder(names, -mean))
+
+
+ggplot(data = viz_data) +
+  geom_linerange(aes(xmin = lower, xmax = upper, y = names, color = sig_factor), linewidth = 2) +
+  geom_point(aes(x = mean, y = names, color = sig_factor, shape = sig_factor), size = 7) +
+  geom_vline(xintercept = 0, color = "darkblue") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All vairables are mean centered and set to a standard scale.") + 
+  scale_color_manual(values = c("darkblue", "darkgreen")) +
+  theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
+
+
 ##### Add Presidentialism with Between effects
 
 m2 <- lmer(v2x_api ~ 
@@ -188,6 +213,31 @@ m2 <- lmer(v2x_api ~
 summary(m2)
 
 ICC(m2)
+
+names <- c("Intercept", "Turnover Within", "Legislative Elections Within", "Executive Elections Within", "Multi-Party Elections Within", "Years Since Election Within", "Uncertainty Within", "Turnover Between", "Legislative Elections Between", "Executive Elections Between", "Multi-Party Elections Between", "Years Since Election Between", "Uncertainty Between", "Suffrage Between", "Suffrage Within", "Political Liberties Within", "Political Liberties Between", "Strong Executive Within", "Strong Executive Between", "Parlimentary Between", "Parlimentary Within")
+
+coef.plot <- summary(m2)[10]
+coef.plot2 <- coef.plot[["coefficients"]]
+coef.plot2 <- as.data.frame(cbind(coef.plot2, names)) %>%
+  rename(stde = `Std. Error`) %>%
+  mutate(stde = as.double(stde), mean = as.double(Estimate), sig = as.double(`t value`))
+
+viz_data <- coef.plot2 %>%
+  mutate(lower = mean - (1.96 * stde), upper = mean + (1.96 * stde), sig_factor = ifelse(abs(sig) >= 1.96, T, F)) %>%
+  filter(names != "Intercept") %>%
+  mutate(names = reorder(names, -mean))
+
+
+ggplot(data = viz_data) +
+  geom_linerange(aes(xmin = lower, xmax = upper, y = names, color = sig_factor), linewidth = 2) +
+  geom_point(aes(x = mean, y = names, color = sig_factor, shape = sig_factor), size = 7) +
+  geom_vline(xintercept = 0, color = "darkblue") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All vairables are mean centered and set to a standard scale.") + 
+  scale_color_manual(values = c("darkblue", "darkgreen")) +
+  theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
+
 
 ##### Add Presidentialism and media freedom with Between effects
 
@@ -222,9 +272,9 @@ ICC(m3)
 
 anova(m0, m1)
 
-names <- c("Intercept", "Turnover Within", "Legislative Elections Within", "Executive Elections Within", "Multi-Party Elections Within", "Years Since Election Within", "Uncertainty Within", "Turnover Between", "Legislative Elections Between", "Executive Elections Between", "Multi-Party Elections Between", "Years Since Election Between", "Uncertainty Between", "Suffrage Between", "Suffrage Within", "Political Liberties Within", "Political Liberties Between")
+names <- c("Intercept", "Turnover Within", "Legislative Elections Within", "Executive Elections Within", "Multi-Party Elections Within", "Years Since Election Within", "Clean Elections Within", "Turnover Between", "Legislative Elections Between", "Executive Elections Between", "Multi-Party Elections Between", "Years Since Election Between", "Clean Elections Between", "Suffrage Between", "Suffrage Within", "Strong Executive Within", "Strong Executive Between", "Parlimentary Between", "Parlimentary Within", "Expression and Information Within", "Expression and Information Between")
 
-coef.plot <- summary(m1)[10]
+coef.plot <- summary(m3)[10]
 coef.plot2 <- coef.plot[["coefficients"]]
 coef.plot2 <- as.data.frame(cbind(coef.plot2, names)) %>%
   rename(stde = `Std. Error`) %>%
@@ -242,7 +292,7 @@ ggplot(data = viz_data) +
   geom_vline(xintercept = 0, color = "darkblue") +
   theme_bw() +
   theme(legend.position = "none") +
-  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All vairables are mean centered and set to a standard scale.") + 
+  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All variables are mean centered and set to a standard scale.") + 
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
@@ -274,7 +324,7 @@ sims <- as.matrix(stan1)
 # draws for overall mean
 mu_a_sims <- as.matrix(sims[, 1])
 # draws for 85 counties county-level random effect
-u_sims <- sims[, 16:211]
+u_sims <- sims[, 17:212]
 # draws for 85 countys' varying intercepts               
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
@@ -314,7 +364,7 @@ ggplot(data = a_df,
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme_bw() +
   labs(y = "Country-Intercept", x = "Rank", title = "Country Intercepts with 95% CI") +
-  annotate("text", label = "Fixed Intercept", x = 185, y= mean(a_df$a_mean)-.03, size = 10, color = "darkblue") +
+  annotate("text", label = "Fixed Intercept", x = 185, y= mean(a_df$a_mean)-.01, size = 10, color = "darkblue") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
@@ -352,7 +402,7 @@ sims <- as.matrix(stan2)
 # draws for overall mean
 mu_a_sims <- as.matrix(sims[, 1])
 # draws for 85 counties county-level random effect
-u_sims <- sims[, 16:211]
+u_sims <- sims[, 21:216]
 # draws for 85 countys' varying intercepts               
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
@@ -392,7 +442,7 @@ ggplot(data = a_df,
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme_bw() +
   labs(y = "Country-Intercept", x = "Rank", title = "Country Intercepts with 95% CI") +
-  annotate("text", label = "Fixed Intercept", x = 185, y= 0.24, size = 10, color = "darkblue") +
+  annotate("text", label = "Fixed Intercept", x = 185, y= mean(a_df$a_mean)-.01, size = 10, color = "darkblue") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
@@ -427,11 +477,11 @@ stan3 <- stan_lmer(v2x_api ~
                      (1|COWcode),
                    data = data, algorithm = "sampling", cores = 12)
 
-sims <- as.matrix(stan2)
+sims <- as.matrix(stan3)
 # draws for overall mean
 mu_a_sims <- as.matrix(sims[, 1])
 # draws for 85 counties county-level random effect
-u_sims <- sims[, 16:211]
+u_sims <- sims[, 22:217]
 # draws for 85 countys' varying intercepts               
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
@@ -471,6 +521,8 @@ ggplot(data = a_df,
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme_bw() +
   labs(y = "Country-Intercept", x = "Rank", title = "Country Intercepts with 95% CI") +
-  annotate("text", label = "Fixed Intercept", x = 185, y= 0.24, size = 10, color = "darkblue") +
+  annotate("text", label = "Fixed Intercept", x = 185, y= 0.374, size = 10, color = "darkblue") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
+
+
