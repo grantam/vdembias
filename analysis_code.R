@@ -1,5 +1,5 @@
 #### By Grant Mitchell
-#### Code last updated on 4/20
+#### Code last updated on 4/24
 
 #### Packages
 
@@ -15,6 +15,7 @@ library(Matrix)
 library(zoo)
 library(plm)
 library(reghelper)
+
 #### functions
 
 neg_binom <- function(bi_var) {
@@ -55,6 +56,7 @@ data <- vdem %>%
   group_by(COWcode) %>%
   mutate(last_elect = log(neg_binom(election) + 1), var_elect = var(last_elect), exec_chose = ifelse(v2exhoshog == 1, v2expathhs, v2expathhg-1), parli = ifelse(exec_chose == 6, 1, 0))
 
+#### Lexical Data
 
 lexical <- read_excel("C:/Users/grantam/Downloads/LIED_6.5.xlsx") %>%
   rename(COWcode = cow) %>%
@@ -108,8 +110,8 @@ ggplot(data = data) +
   labs(title = "Lexical Index vs. V-Dem Polyarchy Index", x = "Year", y = "Average Democracy in the World") +
   theme_bw() + 
   theme(plot.title = element_text(size = 25), axis.title = element_text(size = 20), axis.text = element_text(size = 20)) +
-  annotate("text", label = "Lexical Index", x = 1975, y = .7, size = 7, color = "black") +
-  annotate("text", label = "Polyarchy Index", x = 2000, y = .2, size = 7, color = "grey40")
+  annotate("text", label = "Lexical Index", x = 1975, y = .7, size = 7, color = "grey40") +
+  annotate("text", label = "Polyarchy Index", x = 2000, y = .2, size = 7, color = "black")
 
 
 #### Model
