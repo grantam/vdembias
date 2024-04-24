@@ -132,7 +132,7 @@ m0 <- lmer(v2x_api ~
 
 summary(m0)
 
-ICC(m0)
+ICC(m0) #### check for variance
 
 
 ##### Standard with Between effects
@@ -181,7 +181,7 @@ ggplot(data = viz_data) +
   geom_vline(xintercept = 0, color = "darkblue") +
   theme_bw() +
   theme(legend.position = "none") +
-  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All vairables are mean centered and set to a standard scale.") + 
+  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All variables are mean centered and set to a standard scale.") + 
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
@@ -236,7 +236,7 @@ ggplot(data = viz_data) +
   geom_vline(xintercept = 0, color = "darkblue") +
   theme_bw() +
   theme(legend.position = "none") +
-  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All vairables are mean centered and set to a standard scale.") + 
+  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All variables are mean centered and set to a standard scale.") + 
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
@@ -271,9 +271,6 @@ summary(m3)
 
 ICC(m3)
 
-
-anova(m0, m1)
-
 names <- c("Intercept", "Turnover Within", "Legislative Elections Within", "Executive Elections Within", "Multi-Party Elections Within", "Years Since Election Within", "Clean Elections Within", "Turnover Between", "Legislative Elections Between", "Executive Elections Between", "Multi-Party Elections Between", "Years Since Election Between", "Clean Elections Between", "Suffrage Between", "Suffrage Within", "Strong Executive Within", "Strong Executive Between", "Parlimentary Between", "Parlimentary Within", "Expression and Information Within", "Expression and Information Between")
 
 coef.plot <- summary(m3)[10]
@@ -294,11 +291,11 @@ ggplot(data = viz_data) +
   geom_vline(xintercept = 0, color = "darkblue") +
   theme_bw() +
   theme(legend.position = "none") +
-  labs(title = "Coeffecients of Objective Measures", y = "",x = "Effect Size", caption = "All variables are mean centered and set to a standard scale.") + 
+  labs(title = "Coeffecients of Objective and Subjective Measures", y = "",x = "Effect Size", caption = "All variables are mean centered and set to a standard scale.") + 
   scale_color_manual(values = c("darkblue", "darkgreen")) +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
-#### Stan
+#### Stan Models
 
 options(mc.cores = parallel::detectCores())
 
@@ -322,35 +319,30 @@ stan1 <- stan_lmer(v2x_api ~
                      (1|COWcode),
                    data = data, algorithm = "sampling", cores = 12)
 
+#### CATAPLOT
+
 sims <- as.matrix(stan1)
-# draws for overall mean
+
 mu_a_sims <- as.matrix(sims[, 1])
-# draws for 85 counties county-level random effect
+
 u_sims <- sims[, 17:212]
-# draws for 85 countys' varying intercepts               
+              
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
-# Compute mean, SD, median, and 95% credible interval of varying intercepts
-# Posterior mean and SD of each alpha
 a_mean <- apply(a_sims, 2, mean)
 a_sd <- apply(a_sims, 2, sd)
 a_quant <- apply(a_sims, 2, quantile, 
                  probs = c(0.025, 0.50, 0.975))
 a_quant <- data.frame(t(a_quant))
 names(a_quant) <- c("Q2.5", "Q50", "Q97.5")
-# Combine summary statistics of posterior simulation draws
+
 a_df <- data.frame(a_mean, a_sd, a_quant)
 
-# Sort dataframe containing an estimated alpha's mean and sd for every county
 a_df <- a_df[order(a_df$a_mean), ]
 a_df$a_rank <- c(1 : dim(a_df)[1])
 a_df <- a_df %>%
   mutate(sig = ifelse((Q2.5 > mean(a_df$a_mean) & Q97.5 > mean(a_df$a_mean) | Q2.5 < mean(a_df$a_mean) & Q97.5 < mean(a_df$a_mean)), T, F))
 
-# a vector of country rank 
-
-# Caterpillar plot
-# Plot county-level alphas's posterior mean and 95% credible interval
 ggplot(data = a_df, 
        aes(x = a_rank, 
            y = a_mean, color = sig)) +
@@ -371,7 +363,7 @@ ggplot(data = a_df,
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
 
 
-#### Model
+#### Robustness 2
 
 
 options(mc.cores = parallel::detectCores())
@@ -400,35 +392,31 @@ stan2 <- stan_lmer(v2x_api ~
                      (1|COWcode),
                    data = data, algorithm = "sampling", cores = 12)
 
+#### CATAPLOT
+
 sims <- as.matrix(stan2)
-# draws for overall mean
+
 mu_a_sims <- as.matrix(sims[, 1])
-# draws for 85 counties county-level random effect
+
 u_sims <- sims[, 21:216]
-# draws for 85 countys' varying intercepts               
+               
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
-# Compute mean, SD, median, and 95% credible interval of varying intercepts
-# Posterior mean and SD of each alpha
 a_mean <- apply(a_sims, 2, mean)
 a_sd <- apply(a_sims, 2, sd)
 a_quant <- apply(a_sims, 2, quantile, 
                  probs = c(0.025, 0.50, 0.975))
 a_quant <- data.frame(t(a_quant))
 names(a_quant) <- c("Q2.5", "Q50", "Q97.5")
-# Combine summary statistics of posterior simulation draws
+
 a_df <- data.frame(a_mean, a_sd, a_quant)
 
-# Sort dataframe containing an estimated alpha's mean and sd for every county
+
 a_df <- a_df[order(a_df$a_mean), ]
 a_df$a_rank <- c(1 : dim(a_df)[1])
 a_df <- a_df %>%
   mutate(sig = ifelse((Q2.5 > mean(a_df$a_mean) & Q97.5 > mean(a_df$a_mean) | Q2.5 < mean(a_df$a_mean) & Q97.5 < mean(a_df$a_mean)), T, F))
 
-# a vector of country rank 
-
-# Caterpillar plot
-# Plot county-level alphas's posterior mean and 95% credible interval
 ggplot(data = a_df, 
        aes(x = a_rank, 
            y = a_mean, color = sig)) +
@@ -450,8 +438,6 @@ ggplot(data = a_df,
 
 
 #### Robustness 3
-
-
 
 options(mc.cores = parallel::detectCores())
 
@@ -479,35 +465,31 @@ stan3 <- stan_lmer(v2x_api ~
                      (1|COWcode),
                    data = data, algorithm = "sampling", cores = 12)
 
+
+#### CATAPLOT
+
 sims <- as.matrix(stan3)
-# draws for overall mean
+
 mu_a_sims <- as.matrix(sims[, 1])
-# draws for 85 counties county-level random effect
+
 u_sims <- sims[, 22:217]
-# draws for 85 countys' varying intercepts               
+              
 a_sims <- as.numeric(mu_a_sims) + u_sims          
 
-# Compute mean, SD, median, and 95% credible interval of varying intercepts
-# Posterior mean and SD of each alpha
 a_mean <- apply(a_sims, 2, mean)
 a_sd <- apply(a_sims, 2, sd)
 a_quant <- apply(a_sims, 2, quantile, 
                  probs = c(0.025, 0.50, 0.975))
 a_quant <- data.frame(t(a_quant))
 names(a_quant) <- c("Q2.5", "Q50", "Q97.5")
-# Combine summary statistics of posterior simulation draws
+
 a_df <- data.frame(a_mean, a_sd, a_quant)
 
-# Sort dataframe containing an estimated alpha's mean and sd for every county
 a_df <- a_df[order(a_df$a_mean), ]
 a_df$a_rank <- c(1 : dim(a_df)[1])
 a_df <- a_df %>%
   mutate(sig = ifelse((Q2.5 > mean(a_df$a_mean) & Q97.5 > mean(a_df$a_mean) | Q2.5 < mean(a_df$a_mean) & Q97.5 < mean(a_df$a_mean)), T, F))
 
-# a vector of country rank 
-
-# Caterpillar plot
-# Plot county-level alphas's posterior mean and 95% credible interval
 ggplot(data = a_df, 
        aes(x = a_rank, 
            y = a_mean, color = sig)) +
@@ -526,5 +508,3 @@ ggplot(data = a_df,
   annotate("text", label = "Fixed Intercept", x = 185, y= 0.374, size = 10, color = "darkblue") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(size = 30), axis.title = element_text(size = 20), axis.text = element_text(size = 20), plot.caption = element_text(size = 15))
-
-
